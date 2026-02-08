@@ -1,0 +1,56 @@
+name: ThingsBoard CI
+
+on:
+  push:
+    branches: [ "master", "q3-ci" ]
+  pull_request:
+    branches: [ "master", "q3-ci" ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v4
+
+      - name: Configuration de Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Tests unitaires (modules sélectionnés)
+        run: |
+          mvn -B -pl common/actor,rest-client -am clean test
+
+      - name: Lancement temporaire de ThingsBoard
+        run: |
+          set -e
+          echo "Démarrage de ThingsBoard"
+          nohup mvn -B -pl application -am spring-boot:run > tb.log 2>&1 &
+          echo $! > tb.pid
+
+          echo "Attente du démarrage de l'application"
+          sleep 60
+
+          echo "Derniers logs de démarrage:"
+          tail -n 200 tb.log
+
+          if ! ps -p "$(cat tb.pid)" > /dev/null; then
+            echo "Échec du démarrage de ThingsBoard."
+            cat tb.log
+            exit 1
+          fi
+
+          echo "Arrêt de ThingsBoard"
+          kill "$(cat tb.pid)" || true
+
+      - name: Sauvegarde des journaux d’exécution
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thingsboard-startup-logs
+          path: tb.log
