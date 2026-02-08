@@ -2,9 +2,9 @@ name: ThingsBoard CI
 
 on:
   push:
-    branches: [ "master", "q3-ci" ]
+    branches: [ "master"]
   pull_request:
-    branches: [ "master", "q3-ci" ]
+    branches: [ "master" ]
 
 jobs:
   ci:
@@ -30,27 +30,16 @@ jobs:
         run: |
           set -e
           echo "Démarrage de ThingsBoard"
-          nohup mvn -B -pl application -am spring-boot:run > tb.log 2>&1 &
-          echo $! > tb.pid
+          nohup mvn -B -pl application -am spring-boot:run > /dev/null 2>&1 &
+          PID=$!
 
           echo "Attente du démarrage de l'application"
           sleep 60
 
-          echo "Derniers logs de démarrage:"
-          tail -n 200 tb.log
-
-          if ! ps -p "$(cat tb.pid)" > /dev/null; then
+          if ! ps -p $PID > /dev/null; then
             echo "Échec du démarrage de ThingsBoard."
-            cat tb.log
             exit 1
           fi
 
           echo "Arrêt de ThingsBoard"
-          kill "$(cat tb.pid)" || true
-
-      - name: Sauvegarde des journaux d’exécution
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: thingsboard-startup-logs
-          path: tb.log
+          kill $PID || true
