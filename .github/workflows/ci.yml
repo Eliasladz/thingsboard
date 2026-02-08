@@ -24,7 +24,7 @@ jobs:
 
       - name: Tests unitaires (modules sélectionnés)
         run: |
-          mvn -B -pl common/actor,rest-client -am clean test
+          mvn -B -pl common/actor,common/cache -am clean test
 
       - name: Lancement temporaire de ThingsBoard
         run: |
