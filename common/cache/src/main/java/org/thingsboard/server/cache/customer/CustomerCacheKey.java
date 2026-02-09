@@ -22,6 +22,8 @@ import org.thingsboard.server.common.data.id.TenantId;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 @EqualsAndHashCode
 @RequiredArgsConstructor
@@ -29,10 +31,25 @@ public class CustomerCacheKey implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 5706958428811356925L;
+    private static final Pattern multiWhitespace = Pattern.compile("\\s+");
 
     @NonNull
     private final TenantId tenantId;
     private final String title;
+
+    public static String normalizeTitle(String title) {
+        if (title == null) {
+            return null;
+        }
+        String trimmed = title.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        return multiWhitespace
+                .matcher(trimmed)
+                .replaceAll(" ")
+                .toLowerCase(Locale.ROOT);
+    }
 
     @Override
     public String toString() {
