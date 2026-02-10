@@ -42,23 +42,25 @@ jobs:
         run: |
           mvn -B -pl common/actor,common/cache -am clean test
 
-      - name: Lancement temporaire de ThingsBoard
+      - name: Lancement temporaire de ThingsBoard + test d’intégration (smoke test HTTP)
         run: |
           set -e
           echo "Démarrage de ThingsBoard"
-          nohup mvn -B -pl application -am spring-boot:run > /dev/null 2>&1 &
+          nohup mvn -B -pl application -am spring-boot:run > tb.log 2>&1 &
           PID=$!
 
-          echo "Attente du démarrage de l'application"
-          sleep 60
+          echo "Attente du démarrage de l'application (process)"
+          sleep 15
 
           if ! ps -p $PID > /dev/null; then
-            echo "Échec du démarrage de ThingsBoard."
+            echo "Échec du démarrage de ThingsBoard (process mort)."
+            tail -n 200 tb.log || true
             exit 1
           fi
-          
+
           echo "Exécution du test d’intégration (smoke test HTTP)"
-          bash ci/smoke_test.sh http://localhost:8080/
+          bash ci/smoke_test.sh http://localhost:8080/ 180 || (tail -n 200 tb.log && exit 1)
 
           echo "Arrêt de ThingsBoard"
           kill $PID || true
+
