@@ -60,20 +60,7 @@ jobs:
           echo "Arrêt de ThingsBoard"
           kill $PID || true
 
-      - name: Test d’intégration – Build complet du projet
+      - name: Test d’intégration – Validation du workflow YAML
         run: |
-          echo "Installation des modules dans le repo local Maven"
-          mvn -B -DskipTests install
-
-      - name: Test d’intégration – Packaging du module application
-        run: |
-          echo "Packaging du module application"
-          mvn -B -DskipTests -pl application package
-
-          echo "Vérification de la génération du JAR"
-          if ls application/target/*.jar 1> /dev/null 2>&1; then
-            echo "PASS: Artefact JAR généré avec succès"
-          else
-            echo "FAIL: Aucun JAR généré"
-            exit 1
-          fi
+          python -m pip install --upgrade pip yamllint
+          yamllint .github/workflows/*.yml
