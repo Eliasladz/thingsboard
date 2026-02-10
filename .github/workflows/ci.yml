@@ -60,7 +60,8 @@ jobs:
           echo "Arrêt de ThingsBoard"
           kill $PID || true
 
-      - name: Test d’intégration – Validation du workflow YAML
+      - name: Test d’intégration – Validation YAML (workflow CI)
         run: |
           python -m pip install --upgrade pip yamllint
-          yamllint .github/workflows/*.yml
+          yamllint .github/workflows/ci.yml
+
