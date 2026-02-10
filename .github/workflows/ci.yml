@@ -56,6 +56,9 @@ jobs:
             echo "Échec du démarrage de ThingsBoard."
             exit 1
           fi
+          
+          echo "Exécution du test d’intégration (smoke test HTTP)"
+          bash ci/smoke_test.sh http://localhost:8080/
 
           echo "Arrêt de ThingsBoard"
           kill $PID || true
