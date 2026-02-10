@@ -17,24 +17,25 @@
 
 set -e
 
-URL="${1:-http://localhost:8080/}"
+LOG_FILE="${1:-tb.log}"
 MAX_WAIT_SECONDS="${2:-180}"
 
-echo "Smoke test: waiting up to ${MAX_WAIT_SECONDS}s for $URL"
+echo "Smoke test: waiting up to ${MAX_WAIT_SECONDS}s for startup messages in ${LOG_FILE}"
 
 end=$((SECONDS + MAX_WAIT_SECONDS))
 while [ $SECONDS -lt $end ]; do
-  CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || true)
-
-  if [ "$CODE" = "200" ] || [ "$CODE" = "302" ]; then
-    echo "Smoke test: $URL -> HTTP $CODE"
-    echo "PASS"
-    exit 0
+  if [ -f "$LOG_FILE" ]; then
+    if grep -Eiq "Tomcat started on port|Started .*Application|Starting .*Application|Starting ThingsBoard|Started ThingsBoard" "$LOG_FILE"; then
+      echo "PASS: startup signature found in logs"
+      exit 0
+    fi
   fi
-
-  echo "Not ready yet (HTTP $CODE). Retrying..."
+  echo "Not ready yet (no startup signature). Retrying..."
   sleep 5
 done
 
-echo "FAIL: expected 200 or 302 after ${MAX_WAIT_SECONDS}s"
+echo "FAIL: no startup signature found after ${MAX_WAIT_SECONDS}s"
+echo "Last 200 lines of logs:"
+tail -n 200 "$LOG_FILE" || true
 exit 1
+
