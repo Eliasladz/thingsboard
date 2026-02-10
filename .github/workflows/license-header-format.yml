@@ -34,9 +34,9 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'corretto' # https://github.com/actions/setup-java?tab=readme-ov-file#supported-distributions
+          distribution: 'corretto'
           java-version: '21'
-          cache: 'maven' # https://github.com/actions/setup-java?tab=readme-ov-file#caching-sbt-dependencies
+          cache: 'maven'
 
       - name: License header format
         run: mvn -T 1C license:format
@@ -51,4 +51,5 @@ jobs:
 
       - name: Check and push changes
         run: |
-          git diff --exit-code || git commit -am "License header format" && git push
+          git diff --exit-code || 
+          git commit -am "License header format" && git push
